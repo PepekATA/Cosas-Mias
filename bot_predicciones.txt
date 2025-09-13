@@ -1,0 +1,139 @@
+===============================
+BOT DE PREDICCIÓN DE DIVISAS - MODULAR
+===============================
+
+1. OBJETIVO PRINCIPAL
+--------------------
+- Predecir la dirección de los precios de pares de divisas (forex) en intervalos ajustables.
+- Intervalos de predicción: desde 30 segundos hasta 1 mes.
+- Capacidad de generar señales con:
+    - Hora de inicio de subida/bajada
+    - Duración estimada de la tendencia
+    - Porcentaje de confianza de la predicción
+- Visualización clara y sencilla para usuario final en un dashboard.
+
+2. DATOS DE ENTRADA
+-------------------
+- Fuente principal: Alpaca API (divisas y pares de divisas)
+- Historial de precios: candles por minuto, por hora, diario según necesidad.
+- Indicadores técnicos básicos: RSI, EMA, SMA, MACD, Bollinger Bands, ATR.
+- Indicadores avanzados y derivados: volumen de transacciones, momentum, volatilidad.
+- Datos de eventos externos opcionales: noticias económicas, cambios de política monetaria.
+
+3. ARQUITECTURA DEL BOT
+-----------------------
+- Lenguaje: Python 3.11+
+- Construcción modular:
+    - El bot se desarrollará mediante módulos independientes
+    - Cada módulo realizará una función específica:
+        - Módulo de conexión a API (Alpaca, Binance u otra)
+        - Módulo de recolección de datos históricos
+        - Módulo de cálculo de indicadores técnicos
+        - Módulo de predicción con IA (LSTM, GRU, Transformer)
+        - Módulo de predicción complementaria (Random Forest, XGBoost)
+        - Módulo de almacenamiento de datos y metadatos
+        - Módulo de dashboard y visualización (Streamlit)
+        - Módulo de alertas y notificaciones
+    - No importa la cantidad de módulos (20, 50, 100, 1000) mientras mantenga el código limpio y organizado.
+- Almacenamiento de datos históricos y metadatos:
+    - Formato: CSV o Parquet liviano
+    - Cada inicio de sesión carga los datos previos para aprendizaje incremental.
+- Aprendizaje automático:
+    - Modelos principales: LSTM, GRU, Transformer para series de tiempo.
+    - Modelos secundarios: Random Forest, XGBoost para predicción de dirección (subida/bajada).
+    - Aprendizaje continuo: cada ejecución refuerza modelo con datos nuevos.
+
+4. FUNCIONALIDADES CLAVE
+------------------------
+1. Configuración de intervalo de predicción:
+    - Entrada: tiempo deseado en segundos, minutos, horas o días.
+    - Ejemplo: 5 minutos, 30 segundos, 1 semana.
+2. Generación de señales:
+    - Para cada par de divisas:
+        - Predicción: “Subirá” / “Bajará”
+        - Porcentaje de confianza (0-100%)
+        - Duración estimada de la tendencia
+        - Gráfica visual simple del par de divisas
+3. Dashboard visual:
+    - Gráficas sencillas, limpias, con colores intuitivos (verde para sube, rojo para baja)
+    - Texto descriptivo al lado de la gráfica: ejemplo: 
+        “EUR/USD en 5 minutos empezará a subir, duración estimada 10 minutos, confianza 82%”
+4. Memoria y almacenamiento:
+    - Guardar todos los datos recolectados en ejecución:
+        - Precios históricos
+        - Señales generadas
+        - Predicciones realizadas
+    - Formato ligero (CSV/Parquet)
+    - Permite reiniciar el bot y mantener la capacidad predictiva.
+5. Autoaprendizaje:
+    - Analiza resultados previos para mejorar precisión de predicciones
+    - Ajuste automático de parámetros según efectividad pasada
+6. Señales de alta velocidad:
+    - Puede ejecutar cálculos y predicciones en intervalos de 30s, 1m, 5m, etc.
+    - Preparado para ejecutar múltiples pares de divisas en paralelo.
+7. Configuración flexible:
+    - Selección de pares de divisas a monitorear
+    - Ajuste de horizonte temporal de predicción
+    - Control de modelos de predicción a usar
+
+5. TECNOLOGÍAS Y DEPENDENCIAS
+-----------------------------
+- Python 3.11+
+- Librerías:
+    - alpaca-trade-api
+    - pandas, numpy
+    - matplotlib, plotly, seaborn (visualización)
+    - keras, tensorflow o pytorch (modelos de IA)
+    - scikit-learn, xgboost (modelos de apoyo)
+    - streamlit (dashboard)
+    - joblib (almacenamiento de modelos)
+- Opcional: integración con GitHub para sincronizar datos y resultados
+- Render: hosting de la aplicación gráfica (ejecución bajo demanda)
+
+6. FUNCIONAMIENTO GENERAL
+------------------------
+1. Iniciar bot
+2. Seleccionar pares de divisas y horizonte de predicción
+3. Descargar datos recientes vía Alpaca API
+4. Preprocesar datos y calcular indicadores
+5. Ejecutar modelo de predicción
+6. Generar señal por par de divisas:
+    - Dirección (sube/baja)
+    - Porcentaje de confianza
+    - Duración estimada
+7. Mostrar resultado en dashboard gráfico
+8. Guardar datos y metadatos para aprendizaje futuro
+9. Bot queda en espera hasta siguiente ejecución
+
+7. REQUISITOS DE EFICIENCIA
+---------------------------
+- Guardar solo datos esenciales para reducir peso de almacenamiento
+- Visualización rápida y fluida
+- Predicciones confiables con porcentaje de confianza calculado
+- Escalabilidad: permitir agregar más pares de divisas sin afectar rendimiento
+
+8. FUNCIONES AVANZADAS
+----------------------
+- Multi-horizonte: predicción simultánea en 30s, 1m, 5m, 10m, 1h, 1d, 1sem
+- Memoria incremental: mejora continua del modelo
+- Generación de alertas automáticas (Telegram, correo, Slack)
+- Dashboard interactivo: permitir cambiar horizonte y ver actualización instantánea
+
+9. RESULTADOS ESPERADOS
+-----------------------
+- Predicciones precisas de tendencias de precios
+- Visualización clara y entendible para usuario final
+- Capacidad de ejecutar el bot varias veces al día y mejorar con cada ejecución
+- Sistema escalable, rápido y confiable para pares de divisas en tiempo real
+
+10. NOTAS ADICIONALES
+---------------------
+- El bot no necesita ejecución 24/7, puede lanzarse bajo demanda.
+- Render sirve como host para la visualización y ejecución bajo demanda.
+- Todos los archivos deben ser ligeros y reutilizables en cada inicio.
+- Preparado para integrar nuevas técnicas de IA y machine learning en el futuro.
+- Código modular para mantener claridad y escalabilidad: cada funcionalidad en su propio módulo, independientemente de la cantidad de módulos necesarios.
+
+===============================
+FIN DEL DOCUMENTO
+===============================
