@@ -1,7 +1,18 @@
 forex_prediction_bot/
-├── requirements.txt
-├── config.py
-├── main.py
+├── Dockerfile                    ← Sin extensión
+├── docker-compose.yml           ← Con .yml
+├── .dockerignore                ← Empieza con punto
+├── render.yaml                  ← Con .yaml
+├── railway.json                 ← Con .json
+├── vercel.json                  ← Con .json
+├── requirements.txt             ← Con .txt
+├── Procfile                     ← Sin extensión
+├── app.json                     ← Con .json
+├── .env                         ← Empieza con punto
+├── health.py                    ← Con .py
+├── deploy.sh                    ← Con .sh
+├── config.py                    ← Tu archivo existente
+├── main.py                      ← Tu archivo existente
 ├── modules/
 │   ├── __init__.py
 │   ├── data_collector.py
@@ -12,5 +23,8 @@ forex_prediction_bot/
 │   └── dashboard.py
 ├── data/
 │   ├── historical/
+│   │   └── .gitkeep             ← Empieza con punto
 │   └── models/
+│       └── .gitkeep             ← Empieza con punto
 └── logs/
+    └── .gitkeep                 ← Empieza con punto
