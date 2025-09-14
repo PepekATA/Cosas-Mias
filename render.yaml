@@ -1,0 +1,35 @@
+services:
+  - type: web
+    name: forex-prediction-bot
+    env: docker
+    dockerfilePath: ./Dockerfile
+    plan: free
+    region: oregon
+    envVars:
+      - key: ALPACA_API_KEY
+        sync: false
+      - key: ALPACA_SECRET_KEY
+        sync: false
+      - key: PORT
+        value: 8501
+    disk:
+      name: forex-data
+      mountPath: /app/data
+      sizeGB: 1
+
+  # Servicio cron opcional para predicciones automáticas
+  - type: cron
+    name: forex-predictor-cron
+    env: docker
+    dockerfilePath: ./Dockerfile
+    schedule: "0 */6 * * *"  # Cada 6 horas
+    dockerCommand: python main.py --mode predict
+    envVars:
+      - key: ALPACA_API_KEY
+        sync: false
+      - key: ALPACA_SECRET_KEY
+        sync: false
+    disk:
+      name: forex-data
+      mountPath: /app/data
+      sizeGB: 1
