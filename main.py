@@ -1,41 +1,30 @@
 #!/usr/bin/env python3
-"""
-Bot de Predicción de Divisas - Punto de entrada principal
-ACTUALIZADO PARA DEPLOYMENT
-"""
-
 import sys
 import os
 import argparse
 import logging
 from datetime import datetime
-from modules.venv_manager import check_venv
-check_venv()
-
-# Importa tus módulos
-from modules.ml_utils import entrenar_modelo
-from modules.trading_utils import obtener_datos
-from modules.streamlit_app import iniciar_app
-
-
-
 
 # Agregar el directorio actual al path
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
-# Crear directorios necesarios si no existen
+# Crear directorios necesarios
 required_dirs = ['data/historical', 'data/models', 'logs']
 for dir_path in required_dirs:
     os.makedirs(dir_path, exist_ok=True)
 
 try:
-    from modules import ForexPredictor, DataStorage, Dashboard
+    from modules.predictor import ForexPredictor
+    from modules.storage import DataStorage
+    from modules.dashboard import Dashboard
     from config import CURRENCY_PAIRS, PREDICTION_INTERVALS
 except ImportError as e:
     print(f"Error importando módulos: {e}")
-    print("Instalando dependencias faltantes...")
+    print("Instalando dependencias...")
     os.system("pip install -r requirements.txt")
-    from modules import ForexPredictor, DataStorage, Dashboard
+    from modules.predictor import ForexPredictor
+    from modules.storage import DataStorage
+    from modules.dashboard import Dashboard
     from config import CURRENCY_PAIRS, PREDICTION_INTERVALS
 
 # Configurar logging
@@ -56,23 +45,14 @@ class ForexBot:
         self.storage = DataStorage()
         
     def run_predictions(self, pairs=None, interval='5m'):
-        """
-        Ejecuta predicciones para los pares especificados
-        """
         if pairs is None:
             pairs = CURRENCY_PAIRS
         
         logger.info(f"Iniciando predicciones para {len(pairs)} pares")
-        logger.info(f"Pares: {pairs}")
-        logger.info(f"Intervalo: {interval}")
         
-        # Inicializar modelos
         self.predictor.initialize_models(pairs)
-        
-        # Generar predicciones
         predictions = self.predictor.predict_multiple_pairs(pairs, interval)
         
-        # Mostrar resultados
         print("\n" + "="*50)
         print("PREDICCIONES DE FOREX")
         print("="*50)
@@ -80,18 +60,12 @@ class ForexBot:
         for prediction in predictions:
             self.print_prediction(prediction)
         
-        # Actualizar modelos con resultados pasados
-        logger.info("Actualizando modelos con resultados históricos...")
         self.predictor.update_models_with_results()
-        
-        logger.info("Proceso completado exitosamente")
+        logger.info("Proceso completado")
         
         return predictions
     
     def print_prediction(self, prediction):
-        """
-        Imprime una predicción de forma legible
-        """
         symbol = prediction['symbol']
         direction = prediction['direction']
         confidence = prediction['confidence']
@@ -99,7 +73,6 @@ class ForexBot:
         price_target = prediction['price_target']
         duration = prediction['duration_minutes']
         
-        # Emojis según dirección
         emoji = "🟢⬆️" if direction == 'UP' else "🔴⬇️" if direction == 'DOWN' else "🟡➡️"
         
         print(f"\n{emoji} {symbol}")
@@ -107,89 +80,91 @@ class ForexBot:
         print(f"   Confianza: {confidence:.1%}")
         print(f"   Precio Actual: {current_price:.5f}")
         print(f"   Precio Objetivo: {price_target:.5f}")
-        print(f"   Duración Estimada: {duration} minutos")
+        print(f"   Duración: {duration} minutos")
         
         if prediction.get('error'):
             print("   ⚠️  Error en la predicción")
     
-    # ... resto del código igual ...
+    def train_models(self, pairs=None):
+        if pairs is None:
+            pairs = CURRENCY_PAIRS
+        
+        results = {}
+        for pair in pairs:
+            success = self.predictor.train_model(pair)
+            results[pair] = success
+        
+        return results
+    
+    def show_performance(self):
+        summary = self.storage.get_performance_summary()
+        
+        print("\n" + "="*50)
+        print("RENDIMIENTO DE MODELOS")
+        print("="*50)
+        print(f"Total Predicciones: {summary['total_predictions']}")
+        print(f"Precisión General: {summary['overall_accuracy']:.1%}")
+        
+        if 'by_symbol' in summary:
+            for symbol, stats in summary['by_symbol'].items():
+                print(f"{symbol}: {stats['accuracy']:.1%} ({stats['correct']}/{stats['total']})")
+    
+    def cleanup_old_data(self):
+        self.storage.cleanup_old_files()
+        print("Datos antiguos limpiados")
 
 def main():
-    # Detectar si se está ejecutando desde Streamlit
-    if len(sys.argv) > 1 and sys.argv[1] == '--mode' and sys.argv[2] == 'dashboard':
+    # Detectar modo dashboard para Streamlit
+    if len(sys.argv) > 1 and '--mode' in sys.argv and 'dashboard' in sys.argv:
         print("🖥️  Iniciando Dashboard Web")
-        try:
-            from modules.dashboard import run_dashboard
-            run_dashboard()
-        except Exception as e:
-            print(f"Error iniciando dashboard: {e}")
-            # Fallback básico
-            import streamlit as st
-            st.title("Error en Dashboard")
-            st.error(f"Error: {e}")
+        from modules.dashboard import run_dashboard
+        run_dashboard()
         return
     
-    # Resto de la lógica original
     parser = argparse.ArgumentParser(description='Bot de Predicción de Divisas')
     parser.add_argument('--mode', choices=['predict', 'train', 'dashboard', 'performance', 'cleanup'], 
                        default='dashboard', help='Modo de operación')
-    parser.add_argument('--pairs', nargs='+', default=None, 
-                       help='Pares de divisas a procesar')
+    parser.add_argument('--pairs', nargs='+', default=None, help='Pares específicos')
     parser.add_argument('--interval', choices=list(PREDICTION_INTERVALS.keys()), 
                        default='5m', help='Intervalo de predicción')
     
-    # Si no hay argumentos, ejecutar dashboard por defecto
+    # Si no hay argumentos, iniciar dashboard
     if len(sys.argv) == 1:
-        print("🖥️  Iniciando Dashboard Web (modo por defecto)")
-        try:
-            from modules.dashboard import run_dashboard
-            run_dashboard()
-        except Exception as e:
-            print(f"Error: {e}")
+        print("🖥️  Iniciando Dashboard Web")
+        from modules.dashboard import run_dashboard
+        run_dashboard()
         return
     
     args = parser.parse_args()
-    
-    # Crear instancia del bot
     bot = ForexBot()
     
     try:
         if args.mode == 'predict':
-            # Modo predicción
-            print("🤖 Iniciando Bot de Predicción de Divisas")
-            print(f"⏰ {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
-            
-            predictions = bot.run_predictions(args.pairs, args.interval)
+            print("🤖 Iniciando Bot de Predicción")
+            bot.run_predictions(args.pairs, args.interval)
             
         elif args.mode == 'train':
-            # Modo entrenamiento
-            print("🎯 Iniciando Entrenamiento de Modelos")
-            print(f"⏰ {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
-            
-            results = bot.train_models(args.pairs)
+            print("🎯 Entrenando Modelos")
+            bot.train_models(args.pairs)
             
         elif args.mode == 'dashboard':
-            # Modo dashboard
-            print("🖥️  Iniciando Dashboard Web")
-            
+            print("🖥️  Iniciando Dashboard")
             from modules.dashboard import run_dashboard
             run_dashboard()
             
         elif args.mode == 'performance':
-            # Mostrar rendimiento
             bot.show_performance()
             
         elif args.mode == 'cleanup':
-            # Limpiar datos
             bot.cleanup_old_data()
     
     except KeyboardInterrupt:
-        print("\n⏹️  Proceso interrumpido por el usuario")
+        print("\n⏹️  Interrumpido por usuario")
     except Exception as e:
-        logger.error(f"Error en ejecución principal: {e}")
+        logger.error(f"Error: {e}")
         print(f"❌ Error: {e}")
     
-    print("\n✅ Proceso finalizado")
+    print("\n✅ Finalizado")
 
 if __name__ == "__main__":
     main()
