@@ -1,0 +1,7 @@
+# Crear archivo .env en la raíz del proyecto
+ALPACA_API_KEY=your_alpaca_api_key_here
+ALPACA_SECRET_KEY=your_alpaca_secret_key_here
+
+# Opcional: Configuraciones adicionales
+TELEGRAM_BOT_TOKEN=your_telegram_bot_token
+TELEGRAM_CHAT_ID=your_telegram_chat_id
