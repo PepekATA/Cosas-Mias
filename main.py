@@ -9,6 +9,16 @@ import os
 import argparse
 import logging
 from datetime import datetime
+from modules.venv_manager import check_venv
+check_venv()
+
+# Importa tus módulos
+from modules.ml_utils import entrenar_modelo
+from modules.trading_utils import obtener_datos
+from modules.streamlit_app import iniciar_app
+
+
+
 
 # Agregar el directorio actual al path
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
