@@ -1,0 +1,5 @@
+# Ejecutar dashboard
+python main.py --mode dashboard
+
+# O directamente con streamlit
+streamlit run modules/dashboard.py
