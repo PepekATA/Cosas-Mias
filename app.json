@@ -1,0 +1,22 @@
+{
+  "name": "Forex Prediction Bot",
+  "description": "Bot de predicción de divisas con Machine Learning",
+  "repository": "https://github.com/PepekATA/Cosas-Mias",
+  "logo": "https://node-js-sample.herokuapp.com/node.png",
+  "keywords": ["python", "forex", "machine-learning", "streamlit"],
+  "env": {
+    "ALPACA_API_KEY": {
+      "description": "Alpaca API Key",
+      "required": true
+    },
+    "ALPACA_SECRET_KEY": {
+      "description": "Alpaca Secret Key",
+      "required": true
+    }
+  },
+  "buildpacks": [
+    {
+      "url": "heroku/python"
+    }
+  ]
+}
