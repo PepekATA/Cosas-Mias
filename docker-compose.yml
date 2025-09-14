@@ -1,0 +1,27 @@
+version: '3.8'
+
+services:
+  forex-bot:
+    build: .
+    ports:
+      - "8501:8501"
+    environment:
+      - ALPACA_API_KEY=${ALPACA_API_KEY}
+      - ALPACA_SECRET_KEY=${ALPACA_SECRET_KEY}
+    volumes:
+      - ./data:/app/data
+      - ./logs:/app/logs
+    restart: unless-stopped
+
+  # Servicio opcional para ejecutar predicciones en cron
+  forex-predictor:
+    build: .
+    environment:
+      - ALPACA_API_KEY=${ALPACA_API_KEY}
+      - ALPACA_SECRET_KEY=${ALPACA_SECRET_KEY}
+    volumes:
+      - ./data:/app/data
+      - ./logs:/app/logs
+    command: python main.py --mode predict
+    profiles:
+      - cron
