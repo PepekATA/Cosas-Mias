@@ -1,0 +1,14 @@
+# Modo predicción básica
+python main.py --mode predict
+
+# Entrenar modelos
+python main.py --mode train
+
+# Dashboard web
+python main.py --mode dashboard
+
+# Ver rendimiento
+python main.py --mode performance
+
+# Predicción para pares específicos
+python main.py --mode predict --pairs EUR/USD GBP/USD --interval 1m
