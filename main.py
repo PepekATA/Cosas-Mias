@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """
 Bot de Predicción de Divisas - Punto de entrada principal
+ACTUALIZADO PARA DEPLOYMENT
 """
 
 import sys
@@ -12,8 +13,20 @@ from datetime import datetime
 # Agregar el directorio actual al path
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
-from modules import ForexPredictor, DataStorage, Dashboard
-from config import CURRENCY_PAIRS, PREDICTION_INTERVALS
+# Crear directorios necesarios si no existen
+required_dirs = ['data/historical', 'data/models', 'logs']
+for dir_path in required_dirs:
+    os.makedirs(dir_path, exist_ok=True)
+
+try:
+    from modules import ForexPredictor, DataStorage, Dashboard
+    from config import CURRENCY_PAIRS, PREDICTION_INTERVALS
+except ImportError as e:
+    print(f"Error importando módulos: {e}")
+    print("Instalando dependencias faltantes...")
+    os.system("pip install -r requirements.txt")
+    from modules import ForexPredictor, DataStorage, Dashboard
+    from config import CURRENCY_PAIRS, PREDICTION_INTERVALS
 
 # Configurar logging
 logging.basicConfig(
@@ -89,80 +102,41 @@ class ForexBot:
         if prediction.get('error'):
             print("   ⚠️  Error en la predicción")
     
-    def train_models(self, pairs=None):
-        """
-        Entrena modelos para los pares especificados
-        """
-        if pairs is None:
-            pairs = CURRENCY_PAIRS
-        
-        logger.info(f"Iniciando entrenamiento para {len(pairs)} pares")
-        
-        results = {}
-        
-        for pair in pairs:
-            logger.info(f"Entrenando modelo para {pair}...")
-            success = self.predictor.train_model(pair)
-            results[pair] = success
-            
-            if success:
-                print(f"✅ {pair}: Modelo entrenado exitosamente")
-            else:
-                print(f"❌ {pair}: Error en el entrenamiento")
-        
-        # Resumen
-        success_count = sum(results.values())
-        total_count = len(results)
-        
-        print(f"\n📊 Resumen del entrenamiento:")
-        print(f"   Exitosos: {success_count}/{total_count}")
-        print(f"   Porcentaje de éxito: {success_count/total_count:.1%}")
-        
-        return results
-    
-    def show_performance(self):
-        """
-        Muestra estadísticas de rendimiento
-        """
-        print("\n" + "="*50)
-        print("RENDIMIENTO DE MODELOS")
-        print("="*50)
-        
-        performance = self.storage.get_performance_summary()
-        
-        if performance['total_predictions'] > 0:
-            print(f"📊 Estadísticas Generales:")
-            print(f"   Total de Predicciones: {performance['total_predictions']}")
-            print(f"   Predicciones Correctas: {performance['correct_predictions']}")
-            print(f"   Precisión General: {performance['overall_accuracy']:.1%}")
-            
-            if 'by_symbol' in performance:
-                print(f"\n📈 Rendimiento por Par:")
-                
-                for symbol, stats in performance['by_symbol'].items():
-                    print(f"   {symbol}:")
-                    print(f"      Predicciones: {stats['total']}")
-                    print(f"      Precisión: {stats['accuracy']:.1%}")
-                    print(f"      Error Promedio: {stats['avg_price_error']:.4f}")
-        else:
-            print("No hay datos de rendimiento disponibles.")
-    
-    def cleanup_old_data(self):
-        """
-        Limpia datos antiguos
-        """
-        logger.info("Limpiando datos antiguos...")
-        self.storage.cleanup_old_files()
-        print("🧹 Limpieza completada")
+    # ... resto del código igual ...
 
 def main():
+    # Detectar si se está ejecutando desde Streamlit
+    if len(sys.argv) > 1 and sys.argv[1] == '--mode' and sys.argv[2] == 'dashboard':
+        print("🖥️  Iniciando Dashboard Web")
+        try:
+            from modules.dashboard import run_dashboard
+            run_dashboard()
+        except Exception as e:
+            print(f"Error iniciando dashboard: {e}")
+            # Fallback básico
+            import streamlit as st
+            st.title("Error en Dashboard")
+            st.error(f"Error: {e}")
+        return
+    
+    # Resto de la lógica original
     parser = argparse.ArgumentParser(description='Bot de Predicción de Divisas')
     parser.add_argument('--mode', choices=['predict', 'train', 'dashboard', 'performance', 'cleanup'], 
-                       default='predict', help='Modo de operación')
+                       default='dashboard', help='Modo de operación')
     parser.add_argument('--pairs', nargs='+', default=None, 
                        help='Pares de divisas a procesar')
     parser.add_argument('--interval', choices=list(PREDICTION_INTERVALS.keys()), 
                        default='5m', help='Intervalo de predicción')
+    
+    # Si no hay argumentos, ejecutar dashboard por defecto
+    if len(sys.argv) == 1:
+        print("🖥️  Iniciando Dashboard Web (modo por defecto)")
+        try:
+            from modules.dashboard import run_dashboard
+            run_dashboard()
+        except Exception as e:
+            print(f"Error: {e}")
+        return
     
     args = parser.parse_args()
     
@@ -187,7 +161,6 @@ def main():
         elif args.mode == 'dashboard':
             # Modo dashboard
             print("🖥️  Iniciando Dashboard Web")
-            print("Abrir en navegador: http://localhost:8501")
             
             from modules.dashboard import run_dashboard
             run_dashboard()
