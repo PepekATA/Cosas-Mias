@@ -1,0 +1,11 @@
+# Clonar o descargar el proyecto
+git clone <tu-repositorio>
+cd forex_prediction_bot
+
+# Ejecutar instalación
+chmod +x install.sh
+./install.sh
+
+# Configurar variables de entorno
+cp .env.example .env
+# Editar .env con tus claves de API
