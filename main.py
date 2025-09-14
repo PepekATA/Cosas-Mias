@@ -86,29 +86,23 @@ class ForexBot:
             raise
     
     def run_predictions(self, pairs=None, interval='5m'):
-        """
-        Ejecuta predicciones para los pares especificados
-        """
+        """Ejecuta predicciones para los pares especificados"""
         if pairs is None:
-            pairs = CURRENCY_PAIRS[:4]  # Solo primeros 4 para prueba
+            pairs = CURRENCY_PAIRS[:4]
         
         logger.info(f"🚀 Iniciando predicciones para {len(pairs)} pares")
         logger.info(f"📊 Pares: {pairs}")
         logger.info(f"⏰ Intervalo: {interval}")
         
         try:
-            # Inicializar modelos
             print("🤖 Inicializando modelos...")
             self.predictor.initialize_models(pairs)
             
-            # Generar predicciones
             print("📈 Generando predicciones...")
             predictions = self.predictor.predict_multiple_pairs(pairs, interval)
             
-            # Mostrar resultados
             self.display_results(predictions)
             
-            # Actualizar modelos con resultados pasados
             print("🔄 Actualizando modelos...")
             self.predictor.update_models_with_results()
             
@@ -121,7 +115,7 @@ class ForexBot:
             return []
     
     def display_results(self, predictions):
-        """Muestra los resultados de las predicciones de forma legible"""
+        """Muestra los resultados de las predicciones"""
         print("\n" + "="*60)
         print("🎯 PREDICCIONES DE FOREX - RESULTADOS")
         print("="*60)
@@ -140,7 +134,7 @@ class ForexBot:
         print("✅ Todas las predicciones completadas")
     
     def print_single_prediction(self, prediction, index):
-        """Imprime una predicción individual de forma elegante"""
+        """Imprime una predicción individual"""
         symbol = prediction.get('symbol', 'N/A')
         direction = prediction.get('direction', 'UNKNOWN')
         confidence = prediction.get('confidence', 0.0)
@@ -148,7 +142,6 @@ class ForexBot:
         price_target = prediction.get('price_target', 0.0)
         duration = prediction.get('duration_minutes', 0)
         
-        # Emojis según dirección
         if direction == 'UP':
             emoji = "🟢⬆️"
             color = "VERDE"
@@ -159,7 +152,6 @@ class ForexBot:
             emoji = "🟡➡️"
             color = "AMARILLO"
         
-        # Calcular cambio porcentual esperado
         if current_price > 0:
             pct_change = ((price_target - current_price) / current_price) * 100
         else:
@@ -174,11 +166,9 @@ class ForexBot:
         print(f"   📈 Cambio Esperado: {pct_change:+.3f}%")
         print(f"   ⏱️  Duración Estimada: {duration} minutos")
         
-        # Mostrar advertencias si hay errores
         if prediction.get('error'):
-            print(f"   ⚠️  ADVERTENCIA: Error en la predicción")
+            print("   ⚠️  ADVERTENCIA: Error en la predicción")
         
-        # Mostrar nivel de confianza con barras
         confidence_bars = "█" * int(confidence * 10) + "░" * (10 - int(confidence * 10))
         print(f"   📊 Confianza: [{confidence_bars}] {confidence:.1%}")
     
@@ -212,7 +202,6 @@ class ForexBot:
                 print(f"   ❌ {pair}: Error - {e}")
                 results[pair] = False
         
-        # Resumen final
         print("\n" + "="*50)
         print("📊 RESUMEN DE ENTRENAMIENTO")
         print("="*50)
@@ -226,7 +215,7 @@ class ForexBot:
         return results
     
     def show_performance(self):
-        """Muestra estadísticas de rendimiento de los modelos"""
+        """Muestra estadísticas de rendimiento"""
         print("📊 RENDIMIENTO DE MODELOS")
         print("="*50)
         
@@ -238,13 +227,11 @@ class ForexBot:
                 print("💡 Ejecuta algunas predicciones primero")
                 return
             
-            # Estadísticas generales
             print(f"📈 Total de Predicciones: {summary['total_predictions']}")
             print(f"✅ Predicciones Correctas: {summary['correct_predictions']}")
             print(f"🎯 Precisión General: {summary['overall_accuracy']:.1%}")
             print(f"🕐 Última Actualización: {summary.get('last_updated', 'N/A')}")
             
-            # Rendimiento por símbolo
             if 'by_symbol' in summary and summary['by_symbol']:
                 print("\n📊 RENDIMIENTO POR PAR:")
                 print("-" * 50)
@@ -254,7 +241,6 @@ class ForexBot:
                     total = stats['total']
                     correct = stats['correct']
                     
-                    # Barra de progreso visual
                     progress_bar = "█" * int(accuracy * 20) + "░" * (20 - int(accuracy * 20))
                     
                     print(f"   {symbol}:")
@@ -268,7 +254,7 @@ class ForexBot:
             print(f"❌ Error obteniendo estadísticas: {e}")
     
     def cleanup_old_data(self):
-        """Limpia datos antiguos para mantener el sistema ligero"""
+        """Limpia datos antiguos"""
         print("🧹 LIMPIEZA DE DATOS ANTIGUOS")
         print("="*40)
         
@@ -281,7 +267,6 @@ class ForexBot:
             logger.error(f"Error en limpieza: {e}")
             print(f"❌ Error durante la limpieza: {e}")
 
-# ============== AQUÍ VA EL CÓDIGO ACTUALIZADO ==============
 def run_dashboard_mode():
     """Ejecuta el dashboard web de Streamlit"""
     print("🖥️  INICIANDO DASHBOARD WEB")
@@ -292,7 +277,6 @@ def run_dashboard_mode():
     print("="*40)
     
     try:
-        # Intentar importar y ejecutar dashboard principal
         from modules.dashboard import run_dashboard
         print("✅ Dashboard principal cargado")
         run_dashboard()
@@ -310,7 +294,7 @@ def run_dashboard_mode():
             print(f"⚠️ Error importando dashboard simple: {e2}")
             print("🔄 Creando dashboard de emergencia...")
             
-            # Dashboard de emergencia inline
+            # Dashboard de emergencia
             import streamlit as st
             
             st.set_page_config(
@@ -339,10 +323,10 @@ def run_dashboard_mode():
                 if st.button("🔄 Reintentar Carga"):
                     st.rerun()
             
-            st.markdown("""
+            error_msg = f"""
             ### 🔧 Información de Debug
-            - Error principal: `{}`
-            - Error simple: `{}`
+            - Error principal: {e}
+            - Error simple: {e2}
             - Modo actual: **Emergencia**
             
             ### 📋 Acciones recomendadas:
@@ -350,22 +334,22 @@ def run_dashboard_mode():
             2. Revisa las variables de entorno
             3. Reinicia el servicio
             4. Contacta soporte técnico si el problema persiste
-            """.format(e, e2))
+            """
+            st.markdown(error_msg)
             
-            # Mostrar información del sistema
             with st.expander("📊 Información del Sistema"):
-                st.code(f"""
+                system_info = f"""
 Sistema: Python {sys.version}
 Directorio: {os.getcwd()}
 Archivos disponibles: {os.listdir('.')}
 Módulos disponibles: {os.listdir('modules') if os.path.exists('modules') else 'No encontrado'}
-                """)
+                """
+                st.code(system_info)
             
     except Exception as e:
         print(f"❌ Error crítico en dashboard: {e}")
         logger.error(f"Error crítico en dashboard: {e}")
         
-        # Dashboard de error crítico
         try:
             import streamlit as st
             
@@ -377,7 +361,7 @@ Módulos disponibles: {os.listdir('modules') if os.path.exists('modules') else '
             st.title("❌ Error Crítico del Sistema")
             st.error(f"Error crítico: {e}")
             
-            st.markdown("""
+            critical_msg = f"""
             ### 🆘 El sistema ha encontrado un error crítico
             
             **Detalles del error:**
