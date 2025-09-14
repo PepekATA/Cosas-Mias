@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: forex-prediction-bot
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: streamlit run main.py --mode dashboard --server.port=$PORT --server.address=0.0.0.0
+    envVars:
+      - key: ALPACA_API_KEY
+        sync: false
+      - key: ALPACA_SECRET_KEY
+        sync: false
