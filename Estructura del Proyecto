@@ -1,0 +1,16 @@
+forex_prediction_bot/
+├── requirements.txt
+├── config.py
+├── main.py
+├── modules/
+│   ├── __init__.py
+│   ├── data_collector.py
+│   ├── indicators.py
+│   ├── ml_models.py
+│   ├── predictor.py
+│   ├── storage.py
+│   └── dashboard.py
+├── data/
+│   ├── historical/
+│   └── models/
+└── logs/
