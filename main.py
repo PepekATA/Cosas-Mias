@@ -281,6 +281,7 @@ class ForexBot:
             logger.error(f"Error en limpieza: {e}")
             print(f"❌ Error durante la limpieza: {e}")
 
+# ============== AQUÍ VA EL CÓDIGO ACTUALIZADO ==============
 def run_dashboard_mode():
     """Ejecuta el dashboard web de Streamlit"""
     print("🖥️  INICIANDO DASHBOARD WEB")
@@ -291,168 +292,92 @@ def run_dashboard_mode():
     print("="*40)
     
     try:
+        # Intentar importar y ejecutar dashboard principal
         from modules.dashboard import run_dashboard
+        print("✅ Dashboard principal cargado")
         run_dashboard()
-    except ImportError:
-        print("❌ Error: Módulo dashboard no encontrado")
-        print("🔧 Verifica que modules/dashboard.py existe")
-    except Exception as e:
-        logger.error(f"Error iniciando dashboard: {e}")
-        print(f"❌ Error iniciando dashboard: {e}")
         
-        # Fallback con Streamlit básico
+    except ImportError as e:
+        print(f"⚠️ Error importando dashboard principal: {e}")
+        print("🔄 Intentando con dashboard simple...")
+        
+        try:
+            from modules.simple_dashboard import run_simple_dashboard
+            print("✅ Dashboard simple cargado")
+            run_simple_dashboard()
+            
+        except ImportError as e2:
+            print(f"⚠️ Error importando dashboard simple: {e2}")
+            print("🔄 Creando dashboard de emergencia...")
+            
+            # Dashboard de emergencia inline
+            import streamlit as st
+            
+            st.set_page_config(
+                page_title="Forex Bot - Modo Emergencia",
+                page_icon="⚠️",
+                layout="wide"
+            )
+            
+            st.title("⚠️ Forex Bot - Modo Emergencia")
+            st.markdown("---")
+            
+            st.error(f"Error del sistema principal: {e}")
+            st.warning(f"Error del sistema simple: {e2}")
+            
+            st.info("El sistema está funcionando en modo básico debido a problemas de importación")
+            
+            col1, col2, col3 = st.columns(3)
+            
+            with col1:
+                st.metric("Estado Sistema", "🟡 Limitado")
+                
+            with col2:
+                st.metric("Módulos Cargados", "Básicos")
+                
+            with col3:
+                if st.button("🔄 Reintentar Carga"):
+                    st.rerun()
+            
+            st.markdown("""
+            ### 🔧 Información de Debug
+            - Error principal: `{}`
+            - Error simple: `{}`
+            - Modo actual: **Emergencia**
+            
+            ### 📋 Acciones recomendadas:
+            1. Verifica que todos los archivos estén presentes
+            2. Revisa las variables de entorno
+            3. Reinicia el servicio
+            4. Contacta soporte técnico si el problema persiste
+            """.format(e, e2))
+            
+            # Mostrar información del sistema
+            with st.expander("📊 Información del Sistema"):
+                st.code(f"""
+Sistema: Python {sys.version}
+Directorio: {os.getcwd()}
+Archivos disponibles: {os.listdir('.')}
+Módulos disponibles: {os.listdir('modules') if os.path.exists('modules') else 'No encontrado'}
+                """)
+            
+    except Exception as e:
+        print(f"❌ Error crítico en dashboard: {e}")
+        logger.error(f"Error crítico en dashboard: {e}")
+        
+        # Dashboard de error crítico
         try:
             import streamlit as st
-            st.title("❌ Error en Dashboard")
-            st.error(f"No se pudo inicializar el dashboard: {e}")
-            st.info("Verifica que todos los módulos estén instalados correctamente")
-        except ImportError:
-            print("❌ Streamlit no está instalado")
-            print("📦 Instala con: pip install streamlit")
-
-def display_banner():
-    """Muestra banner de bienvenida"""
-    banner = """
-    ╔══════════════════════════════════════════════════════════════╗
-    ║                                                              ║
-    ║           🤖 BOT DE PREDICCIÓN DE DIVISAS 🤖                ║
-    ║                                                              ║
-    ║                  📈 FOREX PREDICTOR v2.0                    ║
-    ║                                                              ║
-    ║               Predicciones inteligentes con IA               ║
-    ║                                                              ║
-    ╚══════════════════════════════════════════════════════════════╝
-    """
-    print(banner)
-    print(f"⏰ Iniciado: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
-    print("🔧 Sistema: Listo y operativo")
-    print()
-
-def main():
-    """Función principal del programa"""
-    
-    # Mostrar banner
-    display_banner()
-    
-    # Detectar si se ejecuta desde Streamlit con argumentos específicos
-    if len(sys.argv) > 1 and any('--mode' in arg for arg in sys.argv):
-        if 'dashboard' in sys.argv:
-            run_dashboard_mode()
-            return
-    
-    # Configurar parser de argumentos
-    parser = argparse.ArgumentParser(
-        description='🤖 Bot de Predicción de Divisas con IA',
-        formatter_class=argparse.RawDescriptionHelpFormatter,
-        epilog="""
-Ejemplos de uso:
-    python main.py                                    # Dashboard web (por defecto)
-    python main.py --mode predict                     # Predicciones básicas
-    python main.py --mode predict --pairs EUR/USD    # Predicción específica
-    python main.py --mode train                       # Entrenar modelos
-    python main.py --mode performance                 # Ver rendimiento
-    python main.py --mode cleanup                     # Limpiar datos antiguos
-        """
-    )
-    
-    parser.add_argument(
-        '--mode', 
-        choices=['predict', 'train', 'dashboard', 'performance', 'cleanup'], 
-        default='dashboard',
-        help='Modo de operación del bot'
-    )
-    
-    parser.add_argument(
-        '--pairs', 
-        nargs='+', 
-        default=None,
-        help='Pares de divisas específicos (ej: EUR/USD GBP/USD)'
-    )
-    
-    parser.add_argument(
-        '--interval', 
-        choices=list(PREDICTION_INTERVALS.keys()), 
-        default='5m',
-        help='Intervalo de tiempo para predicción'
-    )
-    
-    parser.add_argument(
-        '--verbose', 
-        action='store_true',
-        help='Modo verbose para más detalles'
-    )
-    
-    # Si no hay argumentos, ejecutar dashboard por defecto
-    if len(sys.argv) == 1:
-        run_dashboard_mode()
-        return
-    
-    # Parsear argumentos
-    args = parser.parse_args()
-    
-    # Configurar nivel de logging si verbose
-    if args.verbose:
-        logging.getLogger().setLevel(logging.DEBUG)
-        print("🔍 Modo verbose activado")
-    
-    # Crear instancia del bot
-    try:
-        bot = ForexBot()
-    except Exception as e:
-        print(f"❌ Error crítico inicializando bot: {e}")
-        logger.error(f"Error crítico: {e}")
-        return
-    
-    # Ejecutar según el modo seleccionado
-    try:
-        if args.mode == 'predict':
-            print("🤖 MODO: PREDICCIÓN")
-            predictions = bot.run_predictions(args.pairs, args.interval)
             
-            if predictions:
-                print(f"\n✅ Se generaron {len(predictions)} predicciones")
-            else:
-                print("\n⚠️  No se pudieron generar predicciones")
-                
-        elif args.mode == 'train':
-            print("🎯 MODO: ENTRENAMIENTO")
-            results = bot.train_models(args.pairs)
+            st.set_page_config(
+                page_title="Error Crítico",
+                page_icon="❌"
+            )
             
-            success_count = sum(results.values()) if results else 0
-            total_count = len(results) if results else 0
+            st.title("❌ Error Crítico del Sistema")
+            st.error(f"Error crítico: {e}")
             
-            if success_count == total_count and total_count > 0:
-                print(f"\n✅ Todos los modelos entrenados exitosamente ({success_count}/{total_count})")
-            else:
-                print(f"\n⚠️  Entrenamiento completado: {success_count}/{total_count} exitosos")
-                
-        elif args.mode == 'dashboard':
-            print("🖥️  MODO: DASHBOARD WEB")
-            run_dashboard_mode()
+            st.markdown("""
+            ### 🆘 El sistema ha encontrado un error crítico
             
-        elif args.mode == 'performance':
-            print("📊 MODO: ANÁLISIS DE RENDIMIENTO")
-            bot.show_performance()
-            
-        elif args.mode == 'cleanup':
-            print("🧹 MODO: LIMPIEZA DE DATOS")
-            bot.cleanup_old_data()
-    
-    except KeyboardInterrupt:
-        print("\n\n⏹️  PROCESO INTERRUMPIDO POR EL USUARIO")
-        print("👋 ¡Hasta luego!")
-        
-    except Exception as e:
-        logger.error(f"Error en ejecución principal: {e}")
-        print(f"\n❌ ERROR DURANTE LA EJECUCIÓN: {e}")
-        print("🔧 Revisa los logs para más detalles")
-    
-    finally:
-        print("\n" + "="*60)
-        print("✅ PROCESO FINALIZADO")
-        print(f"⏰ Terminado: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
-        print("📝 Revisa los logs en: logs/forex_bot.log")
-        print("="*60)
-
-if __name__ == "__main__":
-    main()
+            **Detalles del error:**
