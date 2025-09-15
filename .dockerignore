@@ -31,3 +31,6 @@ logs/*
 !data/historical/.gitkeep
 !data/models/.gitkeep
 !logs/.gitkeep
+
+Luis agrego
+PRIMERO main.py
