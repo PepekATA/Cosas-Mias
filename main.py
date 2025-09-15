@@ -39,7 +39,6 @@ except ImportError:
     print("❌ Error: No se encontró config.py")
     sys.exit(1)
 
-# Función para instalar dependencias faltantes
 def install_dependencies():
     """Instala dependencias faltantes"""
     import subprocess
@@ -62,7 +61,6 @@ except ImportError as e:
     print("📦 Instalando dependencias faltantes...")
     install_dependencies()
     
-    # Intentar importar de nuevo
     try:
         from modules.predictor import ForexPredictor
         from modules.storage import DataStorage
@@ -171,101 +169,6 @@ class ForexBot:
         
         confidence_bars = "█" * int(confidence * 10) + "░" * (10 - int(confidence * 10))
         print(f"   📊 Confianza: [{confidence_bars}] {confidence:.1%}")
-    
-    def train_models(self, pairs=None):
-        """Entrena modelos para los pares especificados"""
-        if pairs is None:
-            pairs = CURRENCY_PAIRS[:4]
-        
-        print("🎯 INICIANDO ENTRENAMIENTO DE MODELOS")
-        print("="*50)
-        print(f"⏰ {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
-        print(f"📊 Pares a entrenar: {pairs}")
-        print("="*50)
-        
-        results = {}
-        successful = 0
-        
-        for i, pair in enumerate(pairs, 1):
-            print(f"\n🔄 Entrenando modelo {i}/{len(pairs)}: {pair}")
-            try:
-                success = self.predictor.train_model(pair)
-                results[pair] = success
-                
-                if success:
-                    successful += 1
-                    print(f"   ✅ {pair}: Entrenamiento exitoso")
-                else:
-                    print(f"   ❌ {pair}: Falló el entrenamiento")
-                    
-            except Exception as e:
-                print(f"   ❌ {pair}: Error - {e}")
-                results[pair] = False
-        
-        print("\n" + "="*50)
-        print("📊 RESUMEN DE ENTRENAMIENTO")
-        print("="*50)
-        print(f"✅ Exitosos: {successful}/{len(pairs)} ({successful/len(pairs)*100:.1f}%)")
-        print(f"❌ Fallidos: {len(pairs) - successful}/{len(pairs)}")
-        
-        for pair, success in results.items():
-            status = "✅" if success else "❌"
-            print(f"   {status} {pair}")
-        
-        return results
-    
-    def show_performance(self):
-        """Muestra estadísticas de rendimiento"""
-        print("📊 RENDIMIENTO DE MODELOS")
-        print("="*50)
-        
-        try:
-            summary = self.storage.get_performance_summary()
-            
-            if summary['total_predictions'] == 0:
-                print("⚠️  No hay datos de rendimiento disponibles")
-                print("💡 Ejecuta algunas predicciones primero")
-                return
-            
-            print(f"📈 Total de Predicciones: {summary['total_predictions']}")
-            print(f"✅ Predicciones Correctas: {summary['correct_predictions']}")
-            print(f"🎯 Precisión General: {summary['overall_accuracy']:.1%}")
-            print(f"🕐 Última Actualización: {summary.get('last_updated', 'N/A')}")
-            
-            if 'by_symbol' in summary and summary['by_symbol']:
-                print("\n📊 RENDIMIENTO POR PAR:")
-                print("-" * 50)
-                
-                for symbol, stats in summary['by_symbol'].items():
-                    accuracy = stats['accuracy']
-                    total = stats['total']
-                    correct = stats['correct']
-                    
-                    progress_bar = "█" * int(accuracy * 20) + "░" * (20 - int(accuracy * 20))
-                    
-                    print(f"   {symbol}:")
-                    print(f"     Precisión: [{progress_bar}] {accuracy:.1%}")
-                    print(f"     Resultados: {correct}/{total}")
-                    print(f"     Error Promedio: {stats.get('avg_price_error', 0):.4f}")
-                    print()
-            
-        except Exception as e:
-            logger.error(f"Error mostrando rendimiento: {e}")
-            print(f"❌ Error obteniendo estadísticas: {e}")
-    
-    def cleanup_old_data(self):
-        """Limpia datos antiguos"""
-        print("🧹 LIMPIEZA DE DATOS ANTIGUOS")
-        print("="*40)
-        
-        try:
-            self.storage.cleanup_old_files()
-            print("✅ Limpieza completada exitosamente")
-            print("💾 Espacio liberado en disco")
-            
-        except Exception as e:
-            logger.error(f"Error en limpieza: {e}")
-            print(f"❌ Error durante la limpieza: {e}")
 
 def run_dashboard_mode():
     """Ejecuta el dashboard web de Streamlit"""
@@ -306,8 +209,8 @@ def run_dashboard_mode():
             st.title("⚠️ Forex Bot - Modo Emergencia")
             st.markdown("---")
             
-            st.error(f"Error del sistema principal: {e}")
-            st.warning(f"Error del sistema simple: {e2}")
+            st.error("Error del sistema principal: " + str(e))
+            st.warning("Error del sistema simple: " + str(e2))
             
             st.info("El sistema está funcionando en modo básico debido a problemas de importación")
             
@@ -323,27 +226,27 @@ def run_dashboard_mode():
                 if st.button("🔄 Reintentar Carga"):
                     st.rerun()
             
-            error_msg = f"""
-            ### 🔧 Información de Debug
-            - Error principal: {e}
-            - Error simple: {e2}
-            - Modo actual: **Emergencia**
+            st.markdown("### 🔧 Información de Debug")
+            st.text("- Error principal: " + str(e))
+            st.text("- Error simple: " + str(e2))
+            st.text("- Modo actual: **Emergencia**")
             
-            ### 📋 Acciones recomendadas:
-            1. Verifica que todos los archivos estén presentes
-            2. Revisa las variables de entorno
-            3. Reinicia el servicio
-            4. Contacta soporte técnico si el problema persiste
-            """
-            st.markdown(error_msg)
+            st.markdown("### 📋 Acciones recomendadas:")
+            st.text("1. Verifica que todos los archivos estén presentes")
+            st.text("2. Revisa las variables de entorno")
+            st.text("3. Reinicia el servicio")
+            st.text("4. Contacta soporte técnico si el problema persiste")
             
             with st.expander("📊 Información del Sistema"):
-                system_info = f"""
-Sistema: Python {sys.version}
-Directorio: {os.getcwd()}
-Archivos disponibles: {os.listdir('.')}
-Módulos disponibles: {os.listdir('modules') if os.path.exists('modules') else 'No encontrado'}
-                """
+                system_info = "Sistema: Python " + str(sys.version) + "\n"
+                system_info += "Directorio: " + os.getcwd() + "\n"
+                system_info += "Archivos disponibles: " + str(os.listdir('.')) + "\n"
+                
+                if os.path.exists('modules'):
+                    system_info += "Módulos disponibles: " + str(os.listdir('modules'))
+                else:
+                    system_info += "Módulos disponibles: No encontrado"
+                    
                 st.code(system_info)
             
     except Exception as e:
@@ -359,9 +262,140 @@ Módulos disponibles: {os.listdir('modules') if os.path.exists('modules') else '
             )
             
             st.title("❌ Error Crítico del Sistema")
-            st.error(f"Error crítico: {e}")
+            st.error("Error crítico: " + str(e))
             
-            critical_msg = f"""
-            ### 🆘 El sistema ha encontrado un error crítico
+            st.markdown("### 🆘 El sistema ha encontrado un error crítico")
             
-            **Detalles del error:**
+            st.markdown("**Detalles del error:**")
+            st.code(str(e))
+            
+            st.markdown("### 🔧 Soluciones posibles:")
+            st.text("1. **Reinicia la aplicación** completamente")
+            st.text("2. **Verifica las variables de entorno** (ALPACA_API_KEY, etc.)")
+            st.text("3. **Comprueba la conexión a internet**")
+            st.text("4. **Revisa los logs** en /logs/forex_bot.log")
+            st.text("5. **Contacta soporte técnico**")
+            
+            st.markdown("### 📞 Soporte")
+            st.text("Si el problema persiste, proporciona la siguiente información:")
+            st.text("- Mensaje de error completo")
+            st.text("- Hora del error: " + datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
+            st.text("- Configuración del sistema")
+            
+            if st.button("🔄 Intentar Reiniciar"):
+                st.info("Reiniciando sistema...")
+                st.rerun()
+                
+        except Exception as critical_error:
+            print(f"💀 Error crítico total: {critical_error}")
+            print("🆘 Sistema completamente inoperativo")
+            print("📞 Contacta soporte técnico inmediatamente")
+
+def display_banner():
+    """Muestra banner de bienvenida"""
+    banner = """
+    ╔══════════════════════════════════════════════════════════════╗
+    ║                                                              ║
+    ║           🤖 BOT DE PREDICCIÓN DE DIVISAS 🤖                ║
+    ║                                                              ║
+    ║                  📈 FOREX PREDICTOR v2.0                    ║
+    ║                                                              ║
+    ║               Predicciones inteligentes con IA               ║
+    ║                                                              ║
+    ╚══════════════════════════════════════════════════════════════╝
+    """
+    print(banner)
+    print(f"⏰ Iniciado: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+    print("🔧 Sistema: Listo y operativo")
+    print()
+
+def main():
+    """Función principal del programa"""
+    
+    display_banner()
+    
+    # Detectar si se ejecuta desde Streamlit
+    if len(sys.argv) > 1 and any('--mode' in arg for arg in sys.argv):
+        if 'dashboard' in sys.argv:
+            run_dashboard_mode()
+            return
+    
+    # Parser de argumentos
+    parser = argparse.ArgumentParser(
+        description='🤖 Bot de Predicción de Divisas con IA',
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+Ejemplos de uso:
+    python main.py                                    # Dashboard web (por defecto)
+    python main.py --mode predict                     # Predicciones básicas
+    python main.py --mode predict --pairs EUR/USD    # Predicción específica
+    python main.py --mode train                       # Entrenar modelos
+    python main.py --mode performance                 # Ver rendimiento
+    python main.py --mode cleanup                     # Limpiar datos antiguos
+        """
+    )
+    
+    parser.add_argument(
+        '--mode', 
+        choices=['predict', 'train', 'dashboard', 'performance', 'cleanup'], 
+        default='dashboard',
+        help='Modo de operación del bot'
+    )
+    
+    parser.add_argument(
+        '--pairs', 
+        nargs='+', 
+        default=None,
+        help='Pares de divisas específicos'
+    )
+    
+    parser.add_argument(
+        '--interval', 
+        choices=list(PREDICTION_INTERVALS.keys()), 
+        default='5m',
+        help='Intervalo de tiempo para predicción'
+    )
+    
+    parser.add_argument(
+        '--verbose', 
+        action='store_true',
+        help='Modo verbose para más detalles'
+    )
+    
+    # Si no hay argumentos, ejecutar dashboard
+    if len(sys.argv) == 1:
+        run_dashboard_mode()
+        return
+    
+    args = parser.parse_args()
+    
+    if args.verbose:
+        logging.getLogger().setLevel(logging.DEBUG)
+        print("🔍 Modo verbose activado")
+    
+    try:
+        # Aquí iría el código del bot para otros modos
+        if args.mode == 'dashboard':
+            print("🖥️  MODO: DASHBOARD WEB")
+            run_dashboard_mode()
+        else:
+            st.info("Otros modos aún no implementados en esta versión simplificada")
+    
+    except KeyboardInterrupt:
+        print("\n\n⏹️  PROCESO INTERRUMPIDO POR EL USUARIO")
+        print("👋 ¡Hasta luego!")
+        
+    except Exception as e:
+        logger.error(f"Error en ejecución principal: {e}")
+        print(f"\n❌ ERROR DURANTE LA EJECUCIÓN: {e}")
+        print("🔧 Revisa los logs para más detalles")
+    
+    finally:
+        print("\n" + "="*60)
+        print("✅ PROCESO FINALIZADO")
+        print(f"⏰ Terminado: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+        print("📝 Revisa los logs en: logs/forex_bot.log")
+        print("="*60)
+
+if __name__ == "__main__":
+    main()
