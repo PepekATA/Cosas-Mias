@@ -22,6 +22,8 @@ from modules.almacenamiento import get_alpaca_client
 from modules.predictor import generar_predicciones
 from modules.tablero_simple import mostrar_dashboard, mostrar_charts
 from modules.panel import mostrar_panel_control
+from modules.indicadores import TechnicalIndicators
+
 
 # Crear directorios necesarios
 for dir_path in ['data/historical', 'data/models', 'logs']:
