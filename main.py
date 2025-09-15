@@ -9,6 +9,7 @@ import os
 import logging
 from datetime import datetime
 import warnings
+import streamlit as st
 warnings.filterwarnings('ignore')
 
 # Agregar el directorio actual al path
